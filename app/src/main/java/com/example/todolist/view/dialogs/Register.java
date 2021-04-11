@@ -1,4 +1,4 @@
-package com.example.todolist;
+package com.example.todolist.view.dialogs;
 
 import androidx.constraintlayout.widget.ConstraintLayout;
 import android.app.Activity;
@@ -11,6 +11,10 @@ import android.util.DisplayMetrics;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
+
+import com.example.todolist.R;
+import com.example.todolist.model.User;
+import com.example.todolist.view.activities.TodoMainScreen;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
@@ -74,7 +78,7 @@ public class Register extends ConstraintLayout {
     }
     public void writeNewUser(String password, String email,String name) {
         User user = new User(name,email);
-        Intent intent = new Intent(getContext(),TodoMainScreen.class);
+        Intent intent = new Intent(getContext(), TodoMainScreen.class);
         m_Auth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener((Activity) getContext(), task -> {
                     if (task.isSuccessful()) {

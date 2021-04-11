@@ -1,4 +1,4 @@
-package com.example.todolist;
+package com.example.todolist.view.dialogs;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -7,6 +7,7 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
@@ -14,7 +15,11 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.example.todolist.R;
+import com.example.todolist.view.activities.TodoMainScreen;
 import com.google.firebase.auth.FirebaseAuth;
+
+import static android.content.Context.MODE_PRIVATE;
 
 public class Login extends ConstraintLayout {
     private static final FirebaseAuth m_Auth = FirebaseAuth.getInstance();
@@ -90,8 +95,13 @@ public class Login extends ConstraintLayout {
         });
     }
 
-    private static void SignIn(String emailAddress, String password, Context context){
-        Intent moveToMainScreen = new Intent(context,TodoMainScreen.class);
-        m_Auth.signInWithEmailAndPassword(emailAddress, password).addOnSuccessListener(authResult -> context.startActivity(moveToMainScreen));
+    public static void SignIn(String emailAddress, String password, Context context){
+        Intent moveToMainScreen = new Intent(context, TodoMainScreen.class);
+        m_Auth.signInWithEmailAndPassword(emailAddress, password).addOnSuccessListener(authResult -> {
+            SharedPreferences sharedPreferences = context.getSharedPreferences("USER_DETAILS", MODE_PRIVATE);
+            sharedPreferences.edit().putString("userEmail",emailAddress).apply();
+            sharedPreferences.edit().putString("userPassword",password).apply();
+            context.startActivity(moveToMainScreen);
+        });
     }
 }

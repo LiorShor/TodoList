@@ -1,4 +1,4 @@
-package com.example.todolist;
+package com.example.todolist.view.dialogs;
 
 import android.app.Dialog;
 import android.content.Context;
@@ -11,6 +11,8 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.ConstraintLayout;
+
+import com.example.todolist.R;
 import com.google.firebase.auth.FirebaseAuth;
 
 public class ForgotPassword extends ConstraintLayout {
