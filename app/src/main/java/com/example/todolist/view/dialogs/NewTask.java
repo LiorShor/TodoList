@@ -17,20 +17,20 @@ import androidx.fragment.app.FragmentTransaction;
 
 import com.example.todolist.R;
 import com.example.todolist.model.Task;
-import com.example.todolist.model.TaskList;
+import com.example.todolist.model.TaskMap;
 import com.example.todolist.view.adapters.TaskAdapter;
 import com.example.todolist.view.fragments.SubTaskFragment;
-import com.example.todolist.view.fragments.TaskFragment;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.UUID;
 
 public class NewTask extends ConstraintLayout implements TaskAdapter.ItemCallBack {
     private Dialog m_NewTaskDialog;
@@ -64,10 +64,10 @@ public class NewTask extends ConstraintLayout implements TaskAdapter.ItemCallBac
         {
             if(titleAndEmailValidation()) {
                 String dateCreated = dateFormatForDate.format(Calendar.getInstance().getTimeInMillis());
-                Task task = new Task(m_TitleTextView.getText().toString(),dateCreated, "1");
-                List<Task> newTask = TaskList.getInstance().getTaskList();
-                newTask.add(task);
-                writeNewTaskToDB();
+                Task task = new Task(m_TitleTextView.getText().toString(),dateCreated, UUID.randomUUID().toString());
+                Map<String,Task> newTask = TaskMap.getInstance().getTaskMap();
+                newTask.put(task.getID(),task);
+                writeNewTaskToDB(task);
                 Log.d(TAG, "setOnClickCreateNewTaskButton: " + task);
                 m_NewTaskDialog.dismiss();
                 moveToSubTaskFragment();
@@ -79,28 +79,16 @@ public class NewTask extends ConstraintLayout implements TaskAdapter.ItemCallBac
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         fragmentTransaction.replace(R.id.flContent, new SubTaskFragment()).addToBackStack(null).commit();
     }
-    private void writeNewTaskToDB(){
+
+    private void writeNewTaskToDB(Task task){
         FirebaseUser firebaseUser = m_Auth.getCurrentUser();
         assert firebaseUser != null;
         String uid = firebaseUser.getUid();
         FirebaseDatabase database = FirebaseDatabase.getInstance();
-        DatabaseReference databaseReference = database.getReference("tasks").child(uid);
-        databaseReference.setValue(TaskList.getInstance().getTaskList());
-
-/*        databaseReference.child(uid).addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                Log.d(TAG, "onDataChange: "+snapshot);
-                User user = snapshot.getValue(User.class);
-                user.getTasks().add(task);
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-
-            }
-        });*/
+        DatabaseReference databaseReference = database.getReference("tasks").child(uid).child(task.getID());
+        databaseReference.setValue(task);
     }
+
     private boolean titleAndEmailValidation(){
         boolean validationSuccess = true;
         if(m_TitleTextView.getText().toString().isEmpty()) {
