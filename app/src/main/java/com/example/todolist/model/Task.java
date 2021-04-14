@@ -1,37 +1,41 @@
 package com.example.todolist.model;
 
+import java.io.Serializable;
 import java.util.LinkedList;
 
-public class Task {
-    private final String m_ID;
-    private String m_Title;
-    private String m_DateCreated;
-    private LinkedList<String> items;
+public class Task implements Serializable {
+    public String m_ID;
+    public String m_Title;
+    public String m_DateCreated;
+    public LinkedList<String> items;
 
     public Task(String m_Title, String m_DateCreated, String m_ID) {
         this.m_Title = m_Title;
         this.m_DateCreated = m_DateCreated;
         this.m_ID = m_ID;
-
+        items = new LinkedList<>();
     }
 
-    public String getM_Title() {
+    public Task() {
+    }
+
+    public String getTitle() {
         return m_Title;
     }
 
-    public void setM_Title(String m_Title) {
+    public void setTitle(String m_Title) {
         this.m_Title = m_Title;
     }
 
-    public String getM_DateCreated() {
+    public String getDateCreated() {
         return m_DateCreated;
     }
 
-    public void setM_DateCreated(String m_DateCreated) {
+    public void setDateCreated(String m_DateCreated) {
         this.m_DateCreated = m_DateCreated;
     }
 
-    public String getM_ID() {
+    public String getID() {
         return m_ID;
     }
 

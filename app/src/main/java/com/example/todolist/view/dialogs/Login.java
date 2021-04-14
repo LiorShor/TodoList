@@ -11,13 +11,23 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
 import com.example.todolist.R;
+import com.example.todolist.model.Task;
+import com.example.todolist.model.TaskList;
 import com.example.todolist.view.activities.TodoMainScreen;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import static android.content.Context.MODE_PRIVATE;
 
@@ -27,6 +37,7 @@ public class Login extends ConstraintLayout {
     private Button m_LoginButton;
     private TextView m_SignUpEditText;
     private TextView m_ForgotPasswordTextView;
+    private static final String TAG = "Login";
 
     public Login(@NonNull Context context) {
         super(context);
@@ -96,12 +107,42 @@ public class Login extends ConstraintLayout {
     }
 
     public static void SignIn(String emailAddress, String password, Context context){
-        Intent moveToMainScreen = new Intent(context, TodoMainScreen.class);
+
         m_Auth.signInWithEmailAndPassword(emailAddress, password).addOnSuccessListener(authResult -> {
             SharedPreferences sharedPreferences = context.getSharedPreferences("USER_DETAILS", MODE_PRIVATE);
             sharedPreferences.edit().putString("userEmail",emailAddress).apply();
             sharedPreferences.edit().putString("userPassword",password).apply();
-            context.startActivity(moveToMainScreen);
+            getTaskListFromDB(context);
+
+        });
+    }
+    private static void getTaskListFromDB(Context context){
+        Intent moveToMainScreen = new Intent(context, TodoMainScreen.class);
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
+        FirebaseUser firebaseUser = m_Auth.getCurrentUser();
+        assert firebaseUser != null;
+        String uid = firebaseUser.getUid();
+        DatabaseReference myRef = database.getReference("tasks").child(uid);
+        myRef.get().addOnSuccessListener(new OnSuccessListener<DataSnapshot>() {
+            @Override
+            public void onSuccess(DataSnapshot dataSnapshot) {
+
+            /*}
+        }).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {*/
+                for (DataSnapshot childDataSnapshot : dataSnapshot.getChildren()) {
+                    TaskList.getInstance().getTaskList().add(childDataSnapshot.getValue(Task.class));
+                }
+                context.startActivity(moveToMainScreen);
+                // This method is called once with the initial value and again
+                // whenever data at this location is updated.
+            }
+           /* @Override
+            public void onCancelled(DatabaseError error) {
+                // Failed to read value
+                Log.w("Lior", "Failed to read value.", error.toException());
+            }*/
         });
     }
 }

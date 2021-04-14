@@ -12,20 +12,38 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
+
 import com.example.todolist.R;
 import com.example.todolist.model.Task;
+import com.example.todolist.model.TaskList;
+import com.example.todolist.view.adapters.TaskAdapter;
+import com.example.todolist.view.fragments.SubTaskFragment;
+import com.example.todolist.view.fragments.TaskFragment;
 import com.google.firebase.auth.FirebaseAuth;
-import java.util.Calendar;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
-public class NewTask extends ConstraintLayout {
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.List;
+import java.util.Locale;
+
+public class NewTask extends ConstraintLayout implements TaskAdapter.ItemCallBack {
     private Dialog m_NewTaskDialog;
     private TextView m_TitleTextView;
     private TextView m_FriendEmail;
     private CheckBox m_AddFriendCheckBox;
     private boolean isUserExist = false;
+    private FragmentManager fragmentManager;
     private static final FirebaseAuth m_Auth = FirebaseAuth.getInstance();
     private static final String TAG = "NewTask";
-    public NewTask(@NonNull Context context) {
+    private final SimpleDateFormat dateFormatForDate = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+
+    public NewTask(@NonNull Context context, FragmentManager fragmentManager) {
         super(context);
         m_NewTaskDialog = new Dialog(context);
         setDialogSettings();
@@ -34,6 +52,7 @@ public class NewTask extends ConstraintLayout {
         m_AddFriendCheckBox = m_NewTaskDialog.findViewById(R.id.addFriendCheckBox);
         setOnClickAddFriendCheckBox();
         setOnClickCreateNewTaskButton();
+        this.fragmentManager = fragmentManager;
     }
     private void setOnClickAddFriendCheckBox(){
         m_AddFriendCheckBox.setOnCheckedChangeListener((compoundButton, isChecked) -> m_FriendEmail.setEnabled(isChecked));
@@ -44,10 +63,43 @@ public class NewTask extends ConstraintLayout {
         m_CreateNewTaskButton.setOnClickListener(view ->
         {
             if(titleAndEmailValidation()) {
-                Task task = new Task(m_TitleTextView.getText().toString(), Calendar.getInstance().toString(), "1");
+                String dateCreated = dateFormatForDate.format(Calendar.getInstance().getTimeInMillis());
+                Task task = new Task(m_TitleTextView.getText().toString(),dateCreated, "1");
+                List<Task> newTask = TaskList.getInstance().getTaskList();
+                newTask.add(task);
+                writeNewTaskToDB();
                 Log.d(TAG, "setOnClickCreateNewTaskButton: " + task);
+                m_NewTaskDialog.dismiss();
+                moveToSubTaskFragment();
             }
         });
+    }
+    private void moveToSubTaskFragment(){
+        FragmentManager fragmentManager = this.fragmentManager;
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        fragmentTransaction.replace(R.id.flContent, new SubTaskFragment()).addToBackStack(null).commit();
+    }
+    private void writeNewTaskToDB(){
+        FirebaseUser firebaseUser = m_Auth.getCurrentUser();
+        assert firebaseUser != null;
+        String uid = firebaseUser.getUid();
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
+        DatabaseReference databaseReference = database.getReference("tasks").child(uid);
+        databaseReference.setValue(TaskList.getInstance().getTaskList());
+
+/*        databaseReference.child(uid).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                Log.d(TAG, "onDataChange: "+snapshot);
+                User user = snapshot.getValue(User.class);
+                user.getTasks().add(task);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });*/
     }
     private boolean titleAndEmailValidation(){
         boolean validationSuccess = true;
@@ -55,7 +107,7 @@ public class NewTask extends ConstraintLayout {
             m_TitleTextView.setHintTextColor(Color.RED);
             validationSuccess = false;
         }
-        if(m_AddFriendCheckBox.callOnClick() && m_FriendEmail.toString().isEmpty() || !checkEmailExistsOrNot()) {
+        if(m_AddFriendCheckBox.isChecked() && m_FriendEmail.toString().isEmpty() || m_AddFriendCheckBox.isChecked() && !checkEmailExistsOrNot()) {
             m_FriendEmail.setHintTextColor(Color.RED);
             m_FriendEmail.setTextColor(Color.RED);
             validationSuccess = false;
@@ -107,5 +159,10 @@ public class NewTask extends ConstraintLayout {
         int m_Width = metrics.widthPixels;
         int m_Height = metrics.heightPixels;
         m_NewTaskDialog.getWindow().setLayout((6 * m_Width)/7, (4 * m_Height)/5);
+    }
+
+    @Override
+    public void updateList() {
+
     }
 }

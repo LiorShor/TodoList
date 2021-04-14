@@ -86,7 +86,7 @@ public class Register extends ConstraintLayout {
                         FirebaseUser firebaseUser = m_Auth.getCurrentUser();
                         assert firebaseUser != null;
                         String uid = firebaseUser.getUid();
-                        // Write a message to the database
+                        // Write a user to the database
                         FirebaseDatabase database = FirebaseDatabase.getInstance();
                         DatabaseReference databaseReference = database.getReference("users").child(uid);
                         databaseReference.setValue(user);
@@ -97,7 +97,6 @@ public class Register extends ConstraintLayout {
                         Toast.makeText(getContext(), "Error signing in", Toast.LENGTH_SHORT).show();
                         // If sign in fails, display a message to the user.
                     }
-//        m_Database.child("users").child(userId).setValue(user);
                 });
     }
     private boolean validation(String name, String email, String password, String rePassword) {
