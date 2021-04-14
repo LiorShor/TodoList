@@ -1,26 +1,42 @@
 package com.example.todolist.view.adapters;
 
-import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Filter;
+import android.widget.Filterable;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
 import com.example.todolist.R;
 import com.example.todolist.model.Task;
-import com.example.todolist.model.TaskList;
-import com.google.android.material.snackbar.Snackbar;
+import com.example.todolist.model.TaskMap;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
 
-import java.text.SimpleDateFormat;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Locale;
+import java.util.Map;
 
-public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.ViewHolder> {
-    private final List<Task> m_TaskList;
+public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.ViewHolder> implements Filterable {
+    private final Map<String,Task> m_TaskMap;
+    protected List<Task> m_TaskList;
+    protected List<Task> m_FilteredTaskList;
+    private static final String TAG = "TaskAdapter";
     public TaskAdapter() {
-        this.m_TaskList = TaskList.getInstance().getTaskList();
+        m_TaskMap = TaskMap.getInstance().getTaskMap();
+        List<Task> taskList = new LinkedList<>(m_TaskMap.values());
+        this.m_TaskList = taskList ;
+        this.m_FilteredTaskList = taskList;
     }
 
     @NonNull
@@ -41,6 +57,42 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.ViewHolder> {
         return m_TaskList.size();
     }
 
+    @Override
+    public Filter getFilter() {
+        return new Filter() {
+            @SuppressWarnings("unchecked")
+            @Override
+            protected void publishResults(CharSequence constraint, FilterResults results) {
+                m_TaskList = (List<Task>) results.values;
+
+                notifyDataSetChanged();
+            }
+
+            @Override
+            protected FilterResults performFiltering(CharSequence constraint) {
+                List<Task> filteredResults;
+                if (constraint.length() == 0) {
+                    filteredResults = m_FilteredTaskList;
+                } else {
+                    filteredResults = getFilteredResults(constraint.toString().toLowerCase());
+                }
+
+                FilterResults results = new FilterResults();
+                results.values = filteredResults;
+
+                return results;
+            }
+        };
+    }
+    protected List<Task> getFilteredResults(String constraint) {
+        List<Task> results = new LinkedList<>();
+        for (Task item : m_FilteredTaskList) {
+            if (item.getTitle().toLowerCase().contains(constraint)) {
+                results.add(item);
+            }
+        }
+        return results;
+    }
 
     public static class ViewHolder extends RecyclerView.ViewHolder{
         private final TextView m_TaskTitleTextView;
@@ -53,26 +105,37 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.ViewHolder> {
         }
     }
     public void deleteItem(int position) {
-        m_TaskList.remove(position);
+        Task deletedTask = m_TaskList.get(position);
+        m_TaskList.remove(deletedTask);
+        m_TaskMap.remove(deletedTask.m_ID);
         notifyItemRemoved(position);
-//        showUndoSnackbar();
-    }
-/*
-    private void showUndoSnackbar() {
-        View view = mActivity.findViewById(R.id.coordinator_layout);
-        Snackbar snackbar = Snackbar.make(view, R.string.snack_bar_text,
-                Snackbar.LENGTH_LONG);
-        snackbar.setAction(R.string.snack_bar_undo, v -> undoDelete());
-        snackbar.show();
+        updateDBWithDeletedItem(deletedTask);
     }
 
-    private void undoDelete() {
-        mListItems.add(mRecentlyDeletedItemPosition,
-                mRecentlyDeletedItem);
-        notifyItemInserted(mRecentlyDeletedItemPosition);
-    }
-*/
+    public void updateDBWithDeletedItem(Task deletedTask){
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
+        FirebaseAuth m_Auth = FirebaseAuth.getInstance();
+        FirebaseUser firebaseUser = m_Auth.getCurrentUser();
+        assert firebaseUser != null;
+        Query idQuery = ref.child("tasks").child(firebaseUser.getUid());
+        idQuery.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                for (DataSnapshot snapshotToDelete: dataSnapshot.getChildren()) {
+                    if(deletedTask.getID().equals(snapshotToDelete.child("m_ID").getValue()))
+                    {
+                        snapshotToDelete.getRef().removeValue();
+                        break;
+                    }
+                }
+            }
 
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                Log.e(TAG, "onCancelled", databaseError.toException());
+            }
+        });
+    }
     public interface ItemCallBack{
         void updateList();
     }
