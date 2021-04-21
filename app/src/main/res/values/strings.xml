@@ -22,4 +22,5 @@
     <string name="enter_title">Enter title</string>
     <string name="new_task">new Task</string>
     <string name="search">Search</string>
+    <string name="delete_button">Delete button</string>
 </resources>

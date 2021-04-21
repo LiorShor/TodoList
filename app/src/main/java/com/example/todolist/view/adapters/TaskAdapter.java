@@ -7,7 +7,6 @@ import android.view.ViewGroup;
 import android.widget.Filter;
 import android.widget.Filterable;
 import android.widget.TextView;
-
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -94,9 +93,47 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.ViewHolder> im
         return results;
     }
 
-    public static class ViewHolder extends RecyclerView.ViewHolder{
+    @Override
+    public Filter getFilter() {
+        return new Filter() {
+            @SuppressWarnings("unchecked")
+            @Override
+            protected void publishResults(CharSequence constraint, FilterResults results) {
+                m_TaskList = (List<Task>) results.values;
+
+                notifyDataSetChanged();
+            }
+
+            @Override
+            protected FilterResults performFiltering(CharSequence constraint) {
+                List<Task> filteredResults;
+                if (constraint.length() == 0) {
+                    filteredResults = m_FilteredTaskList;
+                } else {
+                    filteredResults = getFilteredResults(constraint.toString().toLowerCase());
+                }
+
+                FilterResults results = new FilterResults();
+                results.values = filteredResults;
+
+                return results;
+            }
+        };
+    }
+
+    protected List<Task> getFilteredResults(String constraint) {
+        List<Task> results = new LinkedList<>();
+        for (Task item : m_FilteredTaskList) {
+            if (item.getTitle().toLowerCase().contains(constraint)) {
+                results.add(item);
+            }
+        }
+        return results;
+    }
+    public static class ViewHolder extends RecyclerView.ViewHolder {
         private final TextView m_TaskTitleTextView;
         private final TextView m_TaskDateOfCreationTextView;
+
         public ViewHolder(View itemView) {
             super(itemView);
             m_TaskTitleTextView = itemView.findViewById(R.id.titleTextView);
@@ -111,7 +148,6 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.ViewHolder> im
         notifyItemRemoved(position);
         updateDBWithDeletedItem(deletedTask);
     }
-
     public void updateDBWithDeletedItem(Task deletedTask){
         DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
         FirebaseAuth m_Auth = FirebaseAuth.getInstance();
@@ -129,7 +165,6 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.ViewHolder> im
                     }
                 }
             }
-
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
                 Log.e(TAG, "onCancelled", databaseError.toException());
@@ -139,5 +174,4 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.ViewHolder> im
     public interface ItemCallBack{
         void updateList();
     }
-
 }
