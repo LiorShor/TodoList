@@ -9,7 +9,6 @@ import android.widget.Filterable;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-
 import com.example.todolist.R;
 import com.example.todolist.model.Task;
 import com.example.todolist.model.TaskMap;
@@ -21,7 +20,6 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
-
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -54,43 +52,6 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.ViewHolder> im
     @Override
     public int getItemCount() {
         return m_TaskList.size();
-    }
-
-    @Override
-    public Filter getFilter() {
-        return new Filter() {
-            @SuppressWarnings("unchecked")
-            @Override
-            protected void publishResults(CharSequence constraint, FilterResults results) {
-                m_TaskList = (List<Task>) results.values;
-
-                notifyDataSetChanged();
-            }
-
-            @Override
-            protected FilterResults performFiltering(CharSequence constraint) {
-                List<Task> filteredResults;
-                if (constraint.length() == 0) {
-                    filteredResults = m_FilteredTaskList;
-                } else {
-                    filteredResults = getFilteredResults(constraint.toString().toLowerCase());
-                }
-
-                FilterResults results = new FilterResults();
-                results.values = filteredResults;
-
-                return results;
-            }
-        };
-    }
-    protected List<Task> getFilteredResults(String constraint) {
-        List<Task> results = new LinkedList<>();
-        for (Task item : m_FilteredTaskList) {
-            if (item.getTitle().toLowerCase().contains(constraint)) {
-                results.add(item);
-            }
-        }
-        return results;
     }
 
     @Override

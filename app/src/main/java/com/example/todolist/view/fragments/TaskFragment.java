@@ -14,15 +14,10 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.todolist.R;
-import com.example.todolist.model.Task;
-import com.example.todolist.model.TaskMap;
 import com.example.todolist.view.adapters.SwipeToDeleteCallback;
 import com.example.todolist.view.adapters.TaskAdapter;
 import com.example.todolist.view.dialogs.NewTask;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
 
 public class TaskFragment extends Fragment implements TaskAdapter.ItemCallBack {
     private static final String ARG_PARAM1 = "param1";
