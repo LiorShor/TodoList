@@ -21,7 +21,6 @@ import com.example.todolist.model.Task;
 import com.example.todolist.model.TaskMap;
 import com.example.todolist.view.adapters.TaskAdapter;
 import com.example.todolist.view.fragments.SubTaskFragment;
-import com.example.todolist.view.fragments.TaskFragment;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
@@ -122,6 +121,7 @@ public class NewTask extends TaskFragment implements TaskAdapter.ItemCallBack {
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         fragmentTransaction.replace(R.id.flContent, new SubTaskFragment()).addToBackStack(null).commit();
     }
+  
     private void writeNewTaskToDB(Task task){
         FirebaseUser firebaseUser = m_Auth.getCurrentUser();
         assert firebaseUser != null;
