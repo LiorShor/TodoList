@@ -105,7 +105,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.ViewHolder> im
     public void deleteItem(int position) {
         Task deletedTask = m_TaskList.get(position);
         m_TaskList.remove(deletedTask);
-        m_TaskMap.remove(deletedTask.m_ID);
+        m_TaskMap.remove(deletedTask.getID());
         notifyItemRemoved(position);
         updateDBWithDeletedItem(deletedTask);
     }

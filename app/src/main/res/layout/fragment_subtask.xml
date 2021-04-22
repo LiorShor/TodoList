@@ -10,28 +10,29 @@
     <TextView
         android:id="@+id/subTaskTitle"
         android:layout_width="match_parent"
-        android:layout_height="50dp"
+        android:layout_height="54dp"
         android:textSize="30sp"
         app:layout_constraintBottom_toTopOf="@+id/subTaskList"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="1.0">
 
     </TextView>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/subTaskList"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
+        android:layout_height="560dp"
+        android:layout_marginBottom="45dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/subTaskTitle"
-        app:layout_constraintVertical_bias="1.0" />
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/floatingActionButton"
+        android:id="@+id/addTaskFloatingButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:clickable="true"
@@ -47,21 +48,71 @@
         app:layout_constraintVertical_bias="0.917" />
 
     <ImageButton
+        android:id="@+id/deleteSubTaskBT"
         android:layout_width="80dp"
-        android:layout_height="40dp"
+        android:layout_height="46dp"
         android:background="@drawable/deletebuttondesign"
+        android:contentDescription="@string/delete_button"
+        android:elevation="10dp"
+        android:src="@drawable/trashcan"
+        android:tint="@color/white"
+        android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/floatingActionButton"
+        app:layout_constraintEnd_toStartOf="@+id/addTaskFloatingButton"
         app:layout_constraintHorizontal_bias="0.699"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/subTaskTitle"
-        app:layout_constraintVertical_bias="0.9"
-        android:elevation="10dp"
-        android:visibility="invisible"
-        android:src="@drawable/trashcan"
-        android:tint="@color/white"
-        android:contentDescription="@string/delete_button">
-
+        app:layout_constraintVertical_bias="0.890">
     </ImageButton>
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/newTaskCard"
+        android:layout_width="264dp"
+        android:layout_height="46dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/addTaskFloatingButton"
+        app:layout_constraintHorizontal_bias="0.788"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/subTaskTitle"
+        app:layout_constraintVertical_bias="0.890"
+        app:cardCornerRadius="20dp"
+        android:visibility="invisible">
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            >
+
+            <EditText
+                android:id="@+id/newTaskEditText"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:autofillHints="@string/new_task"
+                android:background="@android:color/transparent"
+                android:hint="@string/new_task"
+                android:inputType="text"
+                android:layout_marginStart="10dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/newSubTaskButton"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <ImageButton
+                android:id="@+id/newSubTaskButton"
+                android:layout_width="45dp"
+                android:layout_height="match_parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/newTaskEditText"
+                app:layout_constraintTop_toTopOf="parent"
+                android:src="@drawable/vldpi"
+                android:background="#03A9F4"
+                android:tint="@color/white"
+                app:layout_constraintCircleRadius="25dp"
+                android:contentDescription="@string/new_task"
+                >
+
+            </ImageButton>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.cardview.widget.CardView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

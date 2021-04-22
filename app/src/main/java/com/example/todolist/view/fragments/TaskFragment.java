@@ -9,6 +9,7 @@ import android.view.ViewGroup;
 import android.widget.SearchView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
+import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -34,8 +35,6 @@ public class TaskFragment extends Fragment implements TaskAdapter.ItemCallBack {
     public void onAttach(@NonNull Context context)
     {
         super.onAttach(context);
-        // This makes sure that the host activity has implemented the callback interface
-        // If not, it throws an exception
         try
         {
             mCallback = (DataPassListener) context;
@@ -59,20 +58,13 @@ public class TaskFragment extends Fragment implements TaskAdapter.ItemCallBack {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_task, container, false);
-        FloatingActionButton floatingButton = view.findViewById(R.id.floatingActionButton);
-        floatingButton.setOnClickListener(view1 ->
-        {
-            if(getContext()!=null)
-                new NewTask(getContext(),getFragmentManager());
-        });
-
+        setOnClickFloatingButton(view);
         taskAdapter = new TaskAdapter();
         RecyclerView recyclerView = view.findViewById(R.id.taskList);
         setUpRecyclerView(recyclerView);
         recyclerView.addOnItemTouchListener(new RecyclerItemClickListener(getContext(), recyclerView ,new RecyclerItemClickListener.OnItemClickListener() {
                     @Override public void onItemClick(View view, int position) {
                         mCallback.passData(position);
-                        Toast.makeText(getActivity(), "HEhe", Toast.LENGTH_SHORT).show();
                     }
 
                     @Override public void onLongItemClick(View view, int position) {
@@ -96,6 +88,16 @@ public class TaskFragment extends Fragment implements TaskAdapter.ItemCallBack {
         });
         return view;
     }
+
+    private void setOnClickFloatingButton(View view) {
+        FloatingActionButton floatingButton = view.findViewById(R.id.floatingActionButton);
+        floatingButton.setOnClickListener(view1 ->
+        {
+            if(getContext()!=null)
+                new NewTask(getContext(),getFragmentManager());
+        });
+    }
+
     private void setUpRecyclerView(RecyclerView recyclerView) {
         recyclerView.setAdapter(taskAdapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));

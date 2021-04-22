@@ -4,10 +4,10 @@ import java.io.Serializable;
 import java.util.LinkedList;
 
 public class Task implements Serializable {
-    public String m_ID;
-    public String m_Title;
-    public String m_DateCreated;
-    public LinkedList<String> items;
+    private String m_ID;
+    private String m_Title;
+    private String m_DateCreated;
+    private LinkedList<String> items;
 
     public Task(String m_Title, String m_DateCreated, String m_ID) {
         this.m_Title = m_Title;
