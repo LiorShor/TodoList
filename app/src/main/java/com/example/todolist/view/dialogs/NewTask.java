@@ -1,165 +1,145 @@
 package com.example.todolist.view.dialogs;
 
 import android.app.Activity;
-import android.app.Dialog;
-import android.content.ActivityNotFoundException;
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.util.Log;
-import android.widget.Button;
-import android.widget.CheckBox;
-import android.widget.ImageView;
-import android.widget.TextView;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentTransaction;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.DialogFragment;
+import androidx.lifecycle.ViewModelProviders;
+
 import com.example.todolist.R;
+import com.example.todolist.databinding.DialogNewTaskBinding;
 import com.example.todolist.model.Task;
 import com.example.todolist.model.TaskMap;
 import com.example.todolist.view.adapters.TaskAdapter;
-import com.example.todolist.view.fragments.SubTaskFragment;
-import com.example.todolist.view.fragments.TaskFragment;
+import com.example.todolist.viewmodel.DataLoadListener;
+import com.example.todolist.viewmodel.NewTaskViewModel;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 import java.util.UUID;
 
 
-public class NewTask extends TaskFragment implements TaskAdapter.ItemCallBack {
-    private final Dialog m_NewTaskDialog;
-    private final TextView m_TitleTextView;
-    private final TextView m_FriendEmail;
-    private final CheckBox m_AddFriendCheckBox;
-    private final ImageView m_TaskImage;
+public class NewTask extends DialogFragment implements TaskAdapter.ItemCallBack {
+    private NewTaskViewModel mNewTaskViewModel;
+    private DialogNewTaskBinding mNewTaskDialogBinding;
     private boolean isUserExist = false;
-    private final FragmentManager fragmentManager;
     private static final FirebaseAuth m_Auth = FirebaseAuth.getInstance();
     private static final String TAG = "NewTask";
     private final SimpleDateFormat dateFormatForDate = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+    ActivityResultLauncher<Intent> someActivityResultLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == Activity.RESULT_OK) {
+                    try {
+                        if (result.getData() != null) {
+                            Uri selectedImageUri = result.getData().getData();
+                            mNewTaskDialogBinding.taskImageView.setImageURI(selectedImageUri);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
 
-    public NewTask(@NonNull Context context, FragmentManager fragmentManager) {
-        m_NewTaskDialog = new Dialog(context);
-        setDialogSettings();
-        m_TitleTextView = m_NewTaskDialog.findViewById(R.id.editTextTitle);
-        m_FriendEmail = m_NewTaskDialog.findViewById(R.id.editTextTextFriendEmail);
-        m_AddFriendCheckBox = m_NewTaskDialog.findViewById(R.id.addFriendCheckBox);
-        m_TaskImage = m_NewTaskDialog.findViewById(R.id.uploadImage);
-        setOnClickAddFriendCheckBox();
-        setOnClickCreateNewTaskButton();
-        setOnClickImage();
-        this.fragmentManager = fragmentManager;
+    public static NewTask newInstance(){
+        return new NewTask();
     }
 
-    private void setOnClickImage() {
-        m_TaskImage.setOnClickListener(view -> openGallery());
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        mNewTaskDialogBinding = DialogNewTaskBinding.inflate(LayoutInflater.from(getContext()));
+        getDialog().getWindow().setBackgroundDrawableResource(R.drawable.rounded_dialog);
+        return mNewTaskDialogBinding.getRoot();
     }
 
     @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if(requestCode==0 && resultCode == Activity.RESULT_OK){
-            try {
-                Bundle bundle = data.getExtras();
-                Bitmap bitmap = bundle.getParcelable("data");
-                m_TaskImage.setImageBitmap(bitmap);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-    }
-    public void openGallery(){
-        Intent i = new Intent(Intent.ACTION_PICK,android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-        // ******** code for crop image
-        i.putExtra("crop", "true");
-        i.putExtra("aspectX", 100);
-        i.putExtra("aspectY", 100);
-        i.putExtra("outputX", 256);
-        i.putExtra("outputY", 356);
-
-        try {
-
-            i.putExtra("return-data", true);
-            Objects.requireNonNull(getActivity()).startActivityForResult(Intent.createChooser(i, "Select Picture"), 0);
-
-        }catch (ActivityNotFoundException ex){
-            ex.printStackTrace();
-        }
+    public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        mNewTaskViewModel = ViewModelProviders.of(getActivity()).get(NewTaskViewModel.class);
+        setOnClickAddFriendCheckBox();
+        setOnClickCreateNewTaskButton();
+        setOnClickImage();
     }
 
-    private void setOnClickAddFriendCheckBox(){
-        m_AddFriendCheckBox.setOnCheckedChangeListener((compoundButton, isChecked) -> m_FriendEmail.setEnabled(isChecked));
+    private void setOnClickImage() {
+        mNewTaskDialogBinding.taskImageView.setOnClickListener(view -> openGallery());
     }
 
-    private void setOnClickCreateNewTaskButton(){
-        Button m_CreateNewTaskButton = m_NewTaskDialog.findViewById(R.id.createNewTask);
-        m_CreateNewTaskButton.setOnClickListener(view ->
+    public void openGallery() {
+        Intent i = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.INTERNAL_CONTENT_URI);
+        someActivityResultLauncher.launch(i);
+    }
+
+    private void setOnClickAddFriendCheckBox() {
+        mNewTaskDialogBinding.addFriendCheckBox.setOnCheckedChangeListener((compoundButton, isChecked) ->
+                mNewTaskDialogBinding.editTextTextFriendEmail.setEnabled(isChecked));
+    }
+
+    private void setOnClickCreateNewTaskButton() {
+        mNewTaskDialogBinding.createNewTask.setOnClickListener(view ->
         {
-            if(titleAndEmailValidation()) {
+            if (titleAndEmailValidation()) {
                 String dateCreated = dateFormatForDate.format(Calendar.getInstance().getTimeInMillis());
-                Task task = new Task(m_TitleTextView.getText().toString(),dateCreated, UUID.randomUUID().toString());
-                Map<String,Task> newTask = TaskMap.getInstance().getTaskMap();
-                newTask.put(task.getID(),task);
-                writeNewTaskToDB(task);
+                Task task = new Task(dateCreated, UUID.randomUUID().toString(),mNewTaskDialogBinding.editTextTitle.getText().toString());
+                Map<String, Task> newTask = TaskMap.getInstance().getTaskMap();
+                newTask.put(task.getID(), task);
+                mNewTaskViewModel.init(this);
+                mNewTaskViewModel.writeNewTaskToDatabase(task);
                 Log.d(TAG, "setOnClickCreateNewTaskButton: " + task);
-                m_NewTaskDialog.dismiss();
-                moveToSubTaskFragment();
+                this.dismiss();
             }
         });
     }
 
-    private void moveToSubTaskFragment(){
-        FragmentManager fragmentManager = this.fragmentManager;
-        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-        fragmentTransaction.replace(R.id.flContent, new SubTaskFragment()).addToBackStack(null).commit();
-    }
-  
-    private void writeNewTaskToDB(Task task){
-        FirebaseUser firebaseUser = m_Auth.getCurrentUser();
-        assert firebaseUser != null;
-        String uid = firebaseUser.getUid();
-        FirebaseDatabase database = FirebaseDatabase.getInstance();
-        DatabaseReference databaseReference = database.getReference("tasks").child(uid).child(task.getID());
-        databaseReference.setValue(task);
-    }
-
-    private boolean titleAndEmailValidation(){
+    private boolean titleAndEmailValidation() {
         boolean validationSuccess = true;
-        if(m_TitleTextView.getText().toString().isEmpty()) {
-            m_TitleTextView.setHintTextColor(Color.RED);
+        if (mNewTaskDialogBinding.editTextTitle.getText().toString().isEmpty()) {
+            mNewTaskDialogBinding.editTextTitle.setHintTextColor(Color.RED);
             validationSuccess = false;
         }
-        if(m_AddFriendCheckBox.isChecked() && m_FriendEmail.toString().isEmpty() || m_AddFriendCheckBox.isChecked() && !checkEmailExistsOrNot()) {
-            m_FriendEmail.setHintTextColor(Color.RED);
-            m_FriendEmail.setTextColor(Color.RED);
+        if (mNewTaskDialogBinding.addFriendCheckBox.isChecked() &&
+                mNewTaskDialogBinding.editTextTextFriendEmail.toString().isEmpty() ||
+                mNewTaskDialogBinding.addFriendCheckBox.isChecked() && !checkEmailExistsOrNot()) {
+            mNewTaskDialogBinding.editTextTextFriendEmail.setHintTextColor(Color.RED);
+            mNewTaskDialogBinding.editTextTextFriendEmail.setTextColor(Color.RED);
             validationSuccess = false;
         }
         if (checkEmailExistsOrNot()) {
-            m_FriendEmail.setHintTextColor(Color.BLACK);
-            m_FriendEmail.setTextColor(Color.BLACK);
+            mNewTaskDialogBinding.editTextTextFriendEmail.setHintTextColor(Color.BLACK);
+            mNewTaskDialogBinding.editTextTextFriendEmail.setTextColor(Color.BLACK);
         }
         return validationSuccess;
     }
 
-    private boolean checkEmailExistsOrNot(){
-        String friendEmail = m_FriendEmail.getText().toString();
-        if(!friendEmail.isEmpty()) {
-           Thread thread =  new Thread(() -> m_Auth.fetchSignInMethodsForEmail(friendEmail).addOnCompleteListener(task -> {
+    private boolean checkEmailExistsOrNot() {
+        String friendEmail = mNewTaskDialogBinding.editTextTextFriendEmail.getText().toString();
+        if (!friendEmail.isEmpty()) {
+            Thread thread = new Thread(() -> m_Auth.fetchSignInMethodsForEmail(friendEmail).addOnCompleteListener(task -> {
                 if (task.getResult() != null && task.getResult().getSignInMethods() != null)
                     if (task.getResult().getSignInMethods().size() != 0) {
                         isUserExist = true;
                     }
             }));
-           thread.start();
+            thread.start();
             try {
                 thread.join();
             } catch (InterruptedException e) {
@@ -167,13 +147,6 @@ public class NewTask extends TaskFragment implements TaskAdapter.ItemCallBack {
             }
         }
         return isUserExist;
-    }
-
-    private void setDialogSettings() {
-        m_NewTaskDialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
-        m_NewTaskDialog.setContentView(R.layout.dialog_new_task);
-        m_NewTaskDialog.show();
-        m_NewTaskDialog.setCanceledOnTouchOutside(true);
     }
 
     @Override

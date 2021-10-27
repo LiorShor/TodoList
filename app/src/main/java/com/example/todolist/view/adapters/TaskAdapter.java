@@ -11,7 +11,6 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.todolist.R;
 import com.example.todolist.model.Task;
-import com.example.todolist.model.TaskMap;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -20,20 +19,23 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
+
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.ViewHolder> implements Filterable {
-    private final Map<String,Task> m_TaskMap;
-    protected List<Task> m_TaskList;
-    protected List<Task> m_FilteredTaskList;
+    private  Map<String,Task> mTaskMap;
+    protected List<Task> mTaskList;
+    protected List<Task> mFilteredTaskList;
+
+
     private static final String TAG = "TaskAdapter";
-    public TaskAdapter() {
-        m_TaskMap = TaskMap.getInstance().getTaskMap();
-        List<Task> taskList = new LinkedList<>(m_TaskMap.values());
-        this.m_TaskList = taskList ;
-        this.m_FilteredTaskList = taskList;
+    public TaskAdapter(Map<String,Task> taskMap) {
+        mTaskMap = taskMap;
+        mTaskList = new LinkedList<>();
+        this.mFilteredTaskList = mTaskList;
     }
 
     @NonNull
@@ -45,23 +47,21 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.ViewHolder> im
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        holder.m_TaskTitleTextView.setText(m_TaskList.get(position).getTitle());
-        holder.m_TaskDateOfCreationTextView.setText(m_TaskList.get(position).getDateCreated());
+        holder.m_TaskTitleTextView.setText(mTaskList.get(position).getTitle());
+        holder.m_TaskDateOfCreationTextView.setText(mTaskList.get(position).getDateCreated());
     }
 
     @Override
     public int getItemCount() {
-        return m_TaskList.size();
+        return mTaskList.size();
     }
 
     @Override
     public Filter getFilter() {
         return new Filter() {
-            @SuppressWarnings("unchecked")
             @Override
             protected void publishResults(CharSequence constraint, FilterResults results) {
-                m_TaskList = (List<Task>) results.values;
-
+                mTaskList = (List<Task>) results.values;
                 notifyDataSetChanged();
             }
 
@@ -69,7 +69,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.ViewHolder> im
             protected FilterResults performFiltering(CharSequence constraint) {
                 List<Task> filteredResults;
                 if (constraint.length() == 0) {
-                    filteredResults = m_FilteredTaskList;
+                    filteredResults = mFilteredTaskList;
                 } else {
                     filteredResults = getFilteredResults(constraint.toString().toLowerCase());
                 }
@@ -84,7 +84,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.ViewHolder> im
 
     protected List<Task> getFilteredResults(String constraint) {
         List<Task> results = new LinkedList<>();
-        for (Task item : m_FilteredTaskList) {
+        for (Task item : mFilteredTaskList) {
             if (item.getTitle().toLowerCase().contains(constraint)) {
                 results.add(item);
             }
@@ -97,15 +97,16 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.ViewHolder> im
 
         public ViewHolder(View itemView) {
             super(itemView);
+
             m_TaskTitleTextView = itemView.findViewById(R.id.titleTextView);
             m_TaskDateOfCreationTextView = itemView.findViewById(R.id.dateTextView);
 
         }
     }
     public void deleteItem(int position) {
-        Task deletedTask = m_TaskList.get(position);
-        m_TaskList.remove(deletedTask);
-        m_TaskMap.remove(deletedTask.getID());
+        Task deletedTask = mTaskList.get(position);
+        mTaskList.remove(deletedTask);
+        mTaskMap.remove(deletedTask.getID());
         notifyItemRemoved(position);
         updateDBWithDeletedItem(deletedTask);
     }
@@ -131,6 +132,12 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.ViewHolder> im
                 Log.e(TAG, "onCancelled", databaseError.toException());
             }
         });
+    }
+
+    public void setTasks(Map<String,Task> taskMap){
+        this.mTaskMap = taskMap;
+        mTaskList.addAll(mTaskMap.values());
+        notifyDataSetChanged();
     }
     public interface ItemCallBack{
         void updateList();

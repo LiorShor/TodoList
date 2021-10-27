@@ -1,80 +1,44 @@
 package com.example.todolist.view.fragments;
 
 import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.SearchView;
-import android.widget.Toast;
 import androidx.annotation.NonNull;
-import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import com.example.todolist.R;
+import com.example.todolist.databinding.FragmentTaskBinding;
+import com.example.todolist.view.ICommunicator;
 import com.example.todolist.view.adapters.SwipeToDeleteCallback;
 import com.example.todolist.view.adapters.TaskAdapter;
-import com.example.todolist.view.dialogs.NewTask;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.example.todolist.viewmodel.DataLoadListener;
+import com.example.todolist.viewmodel.NewTaskViewModel;
 
-public class TaskFragment extends Fragment implements TaskAdapter.ItemCallBack {
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
+public class TaskFragment extends Fragment implements DataLoadListener {
     private TaskAdapter taskAdapter;
-    DataPassListener mCallback;
-    public interface DataPassListener{
-        void passData(int data);
-    }
-    public TaskFragment() {
-        // Required empty public constructor
-    }
-    @Override
-    public void onAttach(@NonNull Context context)
-    {
-        super.onAttach(context);
-        try
-        {
-            mCallback = (DataPassListener) context;
-        }
-        catch (ClassCastException e)
-        {
-            throw new ClassCastException(context.toString()+ " must implement OnImageClickListener");
-        }
+    private FragmentTaskBinding mTaskFragmentBinding;
+    private NewTaskViewModel mNewTaskViewModel;
+    private final ICommunicator communicator;
+    public TaskFragment(ICommunicator communicator){
+        this.communicator = communicator;
     }
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            getArguments().getString(ARG_PARAM1);
-            getArguments().getString(ARG_PARAM2);
-        }
+    public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        setOnClickFloatingButton();
+        setUpRecyclerView();
+        searchBarConfiguration();
+
     }
 
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_task, container, false);
-        setOnClickFloatingButton(view);
-        taskAdapter = new TaskAdapter();
-        RecyclerView recyclerView = view.findViewById(R.id.taskList);
-        setUpRecyclerView(recyclerView);
-        recyclerView.addOnItemTouchListener(new RecyclerItemClickListener(getContext(), recyclerView ,new RecyclerItemClickListener.OnItemClickListener() {
-                    @Override public void onItemClick(View view, int position) {
-                        mCallback.passData(position);
-                    }
-
-                    @Override public void onLongItemClick(View view, int position) {
-                        // do whatever
-                    }
-                })
-        );
-        SearchView searchView = view.findViewById(R.id.taskSearch);
-        searchView.setOnClickListener(v -> searchView.setIconified(false));
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+    private void searchBarConfiguration() {
+        mTaskFragmentBinding.taskSearchView.setOnClickListener(taskSearchView -> mTaskFragmentBinding.taskSearchView.setIconified(false));
+        mTaskFragmentBinding.taskSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String text) {
                 return false;
@@ -86,32 +50,55 @@ public class TaskFragment extends Fragment implements TaskAdapter.ItemCallBack {
                 return true;
             }
         });
-        return view;
     }
 
-    private void setOnClickFloatingButton(View view) {
-        FloatingActionButton floatingButton = view.findViewById(R.id.floatingActionButton);
-        floatingButton.setOnClickListener(view1 ->
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        mTaskFragmentBinding = FragmentTaskBinding.inflate(inflater, container, false);
+        mNewTaskViewModel = ViewModelProviders.of(this).get(NewTaskViewModel.class);
+        mNewTaskViewModel.init((DataLoadListener)this);
+        return mTaskFragmentBinding.getRoot();
+
+/*        mTaskFragmentBinding.taskListRecyclerView.addOnItemTouchListener(new RecyclerItemClickListener(getContext(), mTaskFragmentBinding.taskListRecyclerView ,new RecyclerItemClickListener.OnItemClickListener() {
+                    @Override public void onItemClick(View view, int position) {
+                        mCallback.passData(position);
+                    }
+
+                    @Override public void onLongItemClick(View view, int position) {
+                        // do whatever
+                    }
+                })
+        );*/
+    }
+
+    private void setOnClickFloatingButton() {
+        mTaskFragmentBinding.floatingActionButton.setOnClickListener(view ->
         {
-            if(getContext()!=null)
-                new NewTask(getContext(),getFragmentManager());
+            if(getContext()!=null) {
+                communicator.loadNewTask();
+            }
         });
     }
 
-    private void setUpRecyclerView(RecyclerView recyclerView) {
-        recyclerView.setAdapter(taskAdapter);
-        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+    private void setUpRecyclerView() {
+        taskAdapter = new TaskAdapter(mNewTaskViewModel.getTaskMap().getValue());
+        mTaskFragmentBinding.taskListRecyclerView.setAdapter(taskAdapter);
+        mTaskFragmentBinding.taskListRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         ItemTouchHelper itemTouchHelper = new
                 ItemTouchHelper(new SwipeToDeleteCallback(taskAdapter,getContext()));
-        itemTouchHelper.attachToRecyclerView(recyclerView);
-    }
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
+        itemTouchHelper.attachToRecyclerView(mTaskFragmentBinding.taskListRecyclerView);
     }
 
     @Override
-    public void updateList() {
-        taskAdapter.notifyDataSetChanged();
+    public void onTaskLoaded() {
+        mNewTaskViewModel.getTaskMap().observe(getViewLifecycleOwner(), stringTaskMap ->
+        {
+            if(stringTaskMap != null)
+            {
+                taskAdapter.setTasks(stringTaskMap);
+            }
+//            taskAdapter.notifyDataSetChanged();
+        });
     }
 }

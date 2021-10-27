@@ -11,7 +11,8 @@
         android:windowSoftInputMode="adjustResize"
         android:theme="@style/Theme.TodoList">
     <activity android:name=".view.activities.TodoMainScreen" />
-        <activity android:name=".view.activities.MainActivity">
+        <activity android:name=".view.activities.MainActivity"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

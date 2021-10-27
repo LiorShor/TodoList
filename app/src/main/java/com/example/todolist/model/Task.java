@@ -4,15 +4,15 @@ import java.io.Serializable;
 import java.util.LinkedList;
 
 public class Task implements Serializable {
-    private String m_ID;
-    private String m_Title;
-    private String m_DateCreated;
+    private String id;
+    private String title;
+    private String dateCreated;
     private LinkedList<String> items;
 
-    public Task(String m_Title, String m_DateCreated, String m_ID) {
-        this.m_Title = m_Title;
-        this.m_DateCreated = m_DateCreated;
-        this.m_ID = m_ID;
+    public Task(String dateCreated, String id, String title) {
+        this.title = title;
+        this.id = id;
+        this.dateCreated = dateCreated;
         items = new LinkedList<>();
     }
 
@@ -20,23 +20,23 @@ public class Task implements Serializable {
     }
 
     public String getTitle() {
-        return m_Title;
+        return title;
     }
 
     public void setTitle(String m_Title) {
-        this.m_Title = m_Title;
+        this.title = m_Title;
     }
 
     public String getDateCreated() {
-        return m_DateCreated;
+        return dateCreated;
     }
 
     public void setDateCreated(String m_DateCreated) {
-        this.m_DateCreated = m_DateCreated;
+        this.dateCreated = m_DateCreated;
     }
 
     public String getID() {
-        return m_ID;
+        return id;
     }
 
     public LinkedList<String> getItems() {

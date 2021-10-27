@@ -22,13 +22,13 @@ public class SubTaskAdapter  extends RecyclerView.Adapter<SubTaskAdapter.ViewHol
 
     @NonNull
     @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.subtask_item, parent, false);
         return new ViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+    public void onBindViewHolder(ViewHolder holder, int position) {
         holder.m_TaskDoneCheckBox.setText(m_SubTaskList.get(holder.getAdapterPosition()));
         holder.m_TaskDoneCheckBox.setOnCheckedChangeListener((compoundButton, isChecked) ->
         {

@@ -10,10 +10,12 @@ import android.os.Bundle;
 import android.view.WindowManager;
 
 import com.example.todolist.R;
+import com.example.todolist.view.ICommunicator;
+import com.example.todolist.view.dialogs.NewTask;
 import com.example.todolist.view.fragments.SubTaskFragment;
 import com.example.todolist.view.fragments.TaskFragment;
 
-public class TodoMainScreen extends AppCompatActivity implements TaskFragment.DataPassListener {
+public class TodoMainScreen extends AppCompatActivity implements ICommunicator {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,10 +28,16 @@ public class TodoMainScreen extends AppCompatActivity implements TaskFragment.Da
     public void loadTasksFragment() {
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-        fragmentTransaction.add(R.id.flContent, new TaskFragment()).commit();
+        fragmentTransaction.add(R.id.flContent, new TaskFragment((ICommunicator)this)).commit();
     }
 
-    @Override
+    public void loadNewTask(){
+        FragmentManager fm = getSupportFragmentManager();
+        NewTask newTaskDialog = NewTask.newInstance();
+        newTaskDialog.show(fm, null);
+    }
+
+/*    @Override
     public void passData(int data) {
         SubTaskFragment fragmentB = new SubTaskFragment();
         Bundle args = new Bundle();
@@ -38,12 +46,5 @@ public class TodoMainScreen extends AppCompatActivity implements TaskFragment.Da
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         fragmentB.setArguments(args);
         fragmentTransaction.replace(R.id.flContent, fragmentB).addToBackStack(null).commit();
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        //call super
-        super.onActivityResult(requestCode, resultCode, data);
-    }
-
+    }*/
 }

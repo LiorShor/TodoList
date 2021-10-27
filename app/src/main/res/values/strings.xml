@@ -23,4 +23,6 @@
     <string name="new_task">new Task</string>
     <string name="search">Search</string>
     <string name="delete_button">Delete button</string>
+    <string name="enter_email">Enter email</string>
+    <string name="enter_password">Enter password</string>
 </resources>

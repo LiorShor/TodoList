@@ -16,7 +16,7 @@
 
         <TextView
             android:id="@+id/textView10"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:gravity="center"
@@ -98,7 +98,7 @@
             app:layout_constraintVertical_bias="0.076" />
 
         <ImageView
-            android:id="@+id/uploadImage"
+            android:id="@+id/taskImageView"
             android:layout_width="78dp"
             android:layout_height="77dp"
             android:layout_marginStart="26dp"
